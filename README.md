@@ -24,9 +24,9 @@ on Mac/Linux you can run `./vsts-migrate` as a wrapper for `java -jar`.
 
 The `vsts-migrate` tool can do three things.
 
-1. dump specific work items from the (mseng)[https://mseng.visualstudio.com/Mobile%20Center/] VSTS instance 
+1. dump specific work items from the [mseng](https://mseng.visualstudio.com/Mobile%20Center/) VSTS instance 
 
-2. copy a dump into the (msmobilecenter)[https://msmobilecenter.visualstudio.com/] instance
+2. copy a dump into the [msmobilecenter](https://msmobilecenter.visualstudio.com/) instance
 
 3. undo the copy by deleting created items from msmobilecenter
 
