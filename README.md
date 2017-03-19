@@ -12,6 +12,14 @@ Tool to migrate work items from vsts.
 * MSMobilecenter personal access token: Go to [msmobile > you > security](https://msmobilecenter.visualstudio.com/_details/security/tokens) - create token with `Work items (read and write)`, `Project and team (read)` scope. 
 * Set environment variable `MOBILECENTER_ACCESS_TOKEN` to the token created.
 
+
+Note on windows you have to run this as 
+```
+java -jar target/vsts-migrate.jar
+```
+
+on Mac/Linux you can run `./vsts-migrate` as a wrapper for `java -jar`.
+
 ## Guide 
 
 The `vsts-migrate` tool can do three things.
