@@ -1,6 +1,6 @@
 # vsts-work-migrate
 
-Tool to migrate work items from vsts.
+Tool to migrate work items from mseng to msmobilcenter vsts instance.
 
 ## Prerequisites
 
@@ -24,13 +24,15 @@ on Mac/Linux you can run `./vsts-migrate` as a wrapper for `java -jar`.
 
 The `vsts-migrate` tool can do three things.
 
-1. dump specific work items from the [mseng](https://mseng.visualstudio.com/Mobile%20Center/) VSTS instance 
+1. dump specific work items from the [mseng](https://mseng.visualstudio.com/Mobile%20Center/) VSTS instance.
 
-2. copy a dump into the [msmobilecenter](https://msmobilecenter.visualstudio.com/) instance
+2. copy a dump into the [msmobilecenter](https://msmobilecenter.visualstudio.com/) instance (with some limitations).
 
 3. undo the copy by deleting created items from msmobilecenter
 
-All commands support a `-d`/`--dry-run` option which only performs queries it does not create or delete items. The tool also support a `-h`/`--help` option (`./vsts-migrate -h`).
+All commands support a `-d`/`--dry-run` option which only performs queries: it does not create or delete items. 
+
+The tool also support a `-h`/`--help` option (`./vsts-migrate -h`).
 
 Below are the details which you should read first.
 
@@ -63,9 +65,16 @@ Here is the default `mappings.json` file:
 }
 ```
 
-For example, an MSEng workitem with `System.State` of `"On Deck"` would have a `System.State` mapped to `"New"` in the msmobilcenter instance.
+For example, an MSEng workitem with `System.State` of `"On Deck"` would have a `System.State` mapped to `"New"` in the msmobilcenter instance. It's important to also map the "AreaPath" since these will be different in mseng and msmobilcenter.
 
-The `query-file` is a text file with a "WIQL" query (Work Item Query Language) query. For example, here is the one for Test Cloud:
+Note that even though this is invisible in the `mappings.json` file:
+ 
+* "System.TeamProject" will be mapped to a fixed project, specified in the "Copy" step below.
+* For Bugs, we map "Microsoft.VSTS.TCM.ReproSteps" to "System.Description" to deal with the way mseng is configured.
+
+The `query-file` is a text file with a "WIQL" query ([Work Item Query Language](https://www.visualstudio.com/en-us/docs/integrate/api/wit/wiql)) query. 
+
+For example, here is the one for Test Cloud:
 
 ```
 SELECT
@@ -93,14 +102,14 @@ You can adapt the example above (also found in the [test-cloud.wiql](test-cloud.
 
 https://mseng.visualstudio.com/Mobile%20Center/_apps/hub/ottostreifel.wiql-editor.wiql-playground-hub 
 
-
-Example of usage: 
+To run the `dump-from-mseng` command, refer to this example of usage: 
 
 ```bash
 # dump-from-mseng - Dump (and pretty print) WIQL query results from MSEng instance. 
 # Args: <wiql-file-path> <mappings.json> <dump-file-path
 
-vsts-work-migrate git:(master) ✗ ./vsts-migrate dump-from-mseng test-cloud.wiql mappings.json mseng-test-dump.json
+./vsts-migrate dump-from-mseng test-cloud.wiql mappings.json mseng-test-dump.json
+
 Dumping test-cloud.wiql from mseng via mapping: mappings.json
 Options {}
 SELECT
@@ -124,7 +133,7 @@ The `copy-to-msmobilecenter` copies a dump json file into the msmobilecenter ins
 # copy-to-msmobilecenter - Copy query result to msmobilecenter. 
 # Args: <dump-file-path> <Project> <saved-results-output-path>
 
-vsts-work-migrate git:(master) ✗ ./vsts-migrate copy-to-msmobilecenter mseng-test-dump.json Test msmobilecenter-created.json
+./vsts-migrate copy-to-msmobilecenter mseng-test-dump.json Test msmobilecenter-created.json
 ...
 Saving created items as mapping from mseng items to msmobilcenter items as /Users/krukow/code/vsts-work-migrate/msmobilecenter-created.json
 ```
@@ -136,6 +145,9 @@ This will copy the work items from the `mseng-test-dump.json` file into the `Tes
 * We preserve only parent/child links between work items.
 * The history/comments/discussion field seems to not be fully preserved
 * Note, specifically that, IterationPaths are not preserved. 
+
+Since IterationPath is not preserved, it's recommended that you do the dump+copy just after completing a sprint/iteration. Then set up the next iteration in the msmobilcenter instance after the copy. 
+
 
 ```clojure
             [{:op "add"
@@ -182,18 +194,21 @@ where `msmobilecenter-created.json` is the file created in the `Copy` step avove
 
 # Simple usage / Fast-track
 
-If you don't care too much about the details and just want some thing simple that should work for most cases do this. Make sure you've created personal access tokens and set environment variables as specified in the "Prerequisites".
+If you don't care too much about the details and just want some thing simple that should work for most cases, do this. 
 
+0. Make sure you've created personal access tokens and set environment variables as specified in the "Prerequisites".
 1. Make a copy of the `test-cloud.wiql`, say to `my-query.wiql`
 2. Edit the `my-query.wiql` file to change the line "`AND [System.AreaPath] UNDER "Mobile Center\Test Cloud"`" to specify the beacon area-path you want to migrate to the msmobilecenter  instance. You should *not* select just "Mobile Center" and you should *only* select an area path you fully are responsible for migrating.
-3. Edit the `mappings.json` file, specifically the `System.AreaPath` property. This is where you specify how to map area-paths from mseng into desired area-paths in msmobilecenter. Remember to escape back-slash with "\\". Make sure you specify a mapping for *all* the possible area paths you might encounter for your work items in mseng. Note IterationPaths are not preserved. 
+3. Edit the `mappings.json` file, specifically the `System.AreaPath` property. This is where you specify how to map area-paths from mseng into desired area-paths in msmobilecenter. Remember to escape back-slash with "\\\\". Make sure you specify a mapping for *all* the possible area paths you might encounter for your work items in mseng. Note IterationPaths are not preserved. 
 
-Now you're ready for a dry-run.
+Now you're ready for a dump:
 
 4. Run `./vsts-migrate dump-from-mseng my-query.wiql mappings.json mseng-dump.json`
 5. Sanity check the pretty printed output and the output in `mseng-dump.json` 
 
-If you're happy and ready to pull the triger and import to msmobilecenter. Make sure the msmobilecenter project you want to import to is set up - let's call it "Project" below:
+If you're happy and ready to pull the triger and import to msmobilecenter, follow the next steps. 
+
+First, make sure the msmobilecenter project you want to import to exists in msmobilcenter and is configured (ask your lead/manager if you're in doubt). Let's call it "Project" below (this would be e.g. "Test", "Build", ... depending on what you're migrating) 
 
 6. `./vsts-migrate copy-to-msmobilecenter mseng-dump.json <Project> msmobilecenter-created.json`
 
