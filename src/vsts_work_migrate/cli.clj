@@ -64,7 +64,7 @@
           (System/exit 27))))
     (System/exit 0)))
 
-;;    dump-from-mseng             - Dump (and pretty print) WIQL query results from MSEng instance. Arguments: <wiql-file-path> <mappings.json> <dump-file-path>
+
 
 (defn dump-from-mseng [options args]
   (let [[wiql-file-path mappings-file-path dump-file-path] args]
@@ -85,7 +85,6 @@
     (core/dump wiql-file-path mappings-file-path dump-file-path options)))
 
 
-;;    copy-to-msmobilecenter      - Copy WIQL query result to msmobilecenter. Arguments: <dump-file-path> <Project> <saved-results-output-path>
 (defn copy-to-msmobilecenter [options args]
   (let [[dump-file-path project saved-results-output-path] args]
     (when-not (and dump-file-path (.exists (io/file dump-file-path)))
@@ -115,8 +114,6 @@
       (spit saved-results-file (json/generate-string created-items {:pretty true})))))
 
 
-;; SOME BUG HERE NOT ALL DELETED
-;;    delete-from-msmobilecenter  - Delete previously copied work-items from msmobilecenter (i.e. \"undo\" creation). Arguments: <saved-results-output-path>.
 (defn delete-from-msmobilecenter
   [options args]
   (let [[saved-results-output-path] args]

@@ -28,8 +28,6 @@
   (str "https://" (:name instance)
        "/DefaultCollection/" project "/_apis/wit/workitems/$" work-item-type-name "?bypassRules=true&api-version=3.0-preview"))
 
-
-
 (defn wiql-url [instance project]
   (str "https://" (:name instance)
        "/DefaultCollection/" project "/_apis/wit/wiql?api-version=3.0-preview"))
@@ -40,22 +38,20 @@
                              (:http-options instance))]
       (json/parse-string (:body response) true)))
 
-
 (defn get-work-items
   [instance ids]
   (let [response (client/get (work-items-url instance ids)
                              (:http-options instance))]
     (json/parse-string (:body response) true)))
 
-
 (defn create-work-item
   [instance project work-item-type-name work-item-patch]
-  (let [response (client/patch (work-items-create-url instance project work-item-type-name)
+  (let [response (client/patch (work-items-create-url
+                                instance project work-item-type-name)
                                (merge
                                 (:http-options instance)
                                 {:body (json/generate-string work-item-patch)
-                                 :content-type "application/json-patch+json"
-                                 }))]
+                                 :content-type "application/json-patch+json"}))]
     (json/parse-string (:body response) true)))
 
 

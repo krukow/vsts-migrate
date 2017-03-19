@@ -9,7 +9,6 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [clj-http "2.3.0"]
                  [cheshire "5.7.0"]
-                 [com.kotcrab.remark/remark "1.0.0"]
                  [org.clojure/tools.cli "0.3.5"]
                  [commons-codec/commons-codec "1.10"]]
   :plugins [[cider/cider-nrepl "0.14.0"]
