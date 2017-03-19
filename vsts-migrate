@@ -1,0 +1,14 @@
+#! /usr/bin/env ruby
+
+script_dir=File.dirname(__FILE__)
+vsts_migrate_jar="#{script_dir}/../vsts-migrate.jar"
+vsts_migrate_jar="#{script_dir}/vsts-migrate.jar" unless File.exists? vsts_migrate_jar
+vsts_migrate_jar="#{script_dir}/target/vsts-migrate.jar" unless File.exists? vsts_migrate_jar
+
+raise "vsts-migrate.jar not found" unless File.exists? vsts_migrate_jar
+
+if ENV['DEBUG']=='1'
+  exec('java', '-Dxtc.env=development', '-jar', vsts_migrate_jar, *ARGV)
+else
+  exec('java', '-jar', vsts_migrate_jar, *ARGV)
+end
