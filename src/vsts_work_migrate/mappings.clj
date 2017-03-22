@@ -48,10 +48,17 @@
                         (update-in mapped-data
                                    [:fields :System.Description]
                                    (fn [desc]
-                                     (str/join
-                                      "\n"
-                                      [repro-steps (or desc "")])))
-                        mapped-data)]
+                                     (str repro-steps
+                                          "\n"
+                                          desc)))
+                        mapped-data)
+
+        mapped-data (update-in mapped-data
+                               [:fields :System.Description]
+                               (fn [desc]
+                                 (str desc
+                                      "\n\n"
+                                      "Copied from: " (:url work-item))))]
 
     (update-in mapped-data [:relations]
                (fn [relations]
