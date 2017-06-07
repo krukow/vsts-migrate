@@ -6,6 +6,7 @@
              [vsts-work-migrate.vsts-api :as api]
              [vsts-work-migrate.mappings :as mappings]
              [vsts-work-migrate.helpers :as wi-helpers]
+             [vsts-work-migrate.template :as template]
              [cheshire.core :as json]))
 
 (defn query-work-items
@@ -98,3 +99,16 @@
         (api/delete-work-item instance id))
       (do
         (println "DRY RUN: Not deleting item" id)))))
+
+(defn template
+  [instance work-item-ids options]
+  (let [items (api/get-work-items instance work-item-ids)
+        view-model (map wi-helpers/view-model (:value items))]
+    (println "View model for work items: " work-item-ids)
+    (clojure.pprint/pprint view-model)
+    (if-not (:dry-run options)
+      (do
+        (println "Printing template for work-items" work-item-ids)
+        (spit (:output-file options) (apply str (template/main-template view-model)))
+        (println "Wrote result to " (:output-file options)))
+      (println "DRY RUN: Not writing file"))))
