@@ -16,14 +16,31 @@
     dump-from-mseng             - Dump (and pretty print) WIQL query results from MSEng instance. Arguments: <wiql-file-path> <mappings.json> <dump-file-path>
     copy-to-msmobilecenter      - Copy WIQL query result to msmobilecenter. Arguments: <dump-file-path> <Project> <saved-results-output-path>
     delete-from-msmobilecenter  - Delete previously copied work-items from msmobilecenter (i.e. \"undo\" creation). Arguments: <saved-results-output-path>.
+    weekly-email                - Save a weekly email from template. Arguments: <input-template-path>  <saved-output-path> <VSTS work item ids>.
     ")))
 
 
 (def cli-options
   [["-h" "--help"]
-   ["-d" "--dry-run"]])
+   ["-d" "--dry-run"]
+   ["-w" "--weekly-items WORK-ITEMS" "Commma separated list of work-item ids"
+    :parse-fn (fn [csl]
+                (map #(Integer/parseInt %)
+                     (clojure.string/split csl #",")))]])
 
-(declare dump-from-mseng copy-to-msmobilecenter delete-from-msmobilecenter)
+(declare dump-from-mseng copy-to-msmobilecenter delete-from-msmobilecenter weekly-email)
+
+(defn- check-mseng-token!
+  []
+  (when (clojure.string/blank? (cfg/mseng-personal-access-token))
+    (println "You must specify environment variable:" "MSENG_ACCESS_TOKEN")
+    (System/exit 1)))
+
+(defn- check-file-exists!
+  [file]
+  (when-not (and file (.exists file))
+    (println "You must specify an existing file:" (str file))
+    (System/exit 1)))
 
 (defn -main
   [& args]
@@ -38,9 +55,7 @@
                         (dump-usage summary)
                         (System/exit 0)))
 
-    (when (clojure.string/blank? (cfg/mseng-personal-access-token))
-      (println "You must specify environment variable:" "MSENG_ACCESS_TOKEN")
-      (System/exit 1))
+
     (when (clojure.string/blank? (cfg/msmobilecenter-personal-access-token))
       (println "You must specify environment variable:" "MOBILECENTER_ACCESS_TOKEN")
       (System/exit 1))
@@ -53,6 +68,7 @@
         "dump-from-mseng" (dump-from-mseng options (rest arguments))
         "copy-to-msmobilecenter" (copy-to-msmobilecenter options (rest arguments))
         "delete-from-msmobilecenter" (delete-from-msmobilecenter options (rest arguments))
+        "weekly-email" (weekly-email options (rest arguments))
         (binding [*out* *err*]
           (println "** No such tool:" (first arguments))
           (dump-usage summary)
@@ -67,6 +83,7 @@
 
 
 (defn dump-from-mseng [options args]
+  check-mseng-token!
   (let [[wiql-file-path mappings-file-path dump-file-path] args]
     (when-not (and wiql-file-path (.exists (io/file wiql-file-path)))
       (println "WIQL File does not exist:" wiql-file-path)
@@ -134,3 +151,32 @@
                                             true)
                          options)]
       (println "Done deleting items"))))
+
+(defn to-integer [s]
+  (try
+    (Integer/parseInt s 10)
+    (catch Exception e
+      nil)))
+
+
+(defn weekly-email
+  [options args]
+  (let [input-template (io/file (first args))
+        output-file (io/file (second args))
+        ids (map to-integer (take-while to-integer (rest (rest args))))]
+    (clojure.pprint/pprint options)
+
+    (check-file-exists! input-template)
+    (when-not output-file
+      (println "You must specify an output-file")
+      (System/exit 1))
+
+    (when (empty? ids)
+      (println "You must specify one or more work-item ids from msmobilecenter")
+      (System/exit 1))
+
+    (core/template cfg/msmobilecenter-instance
+                   input-template
+                   ids
+                   output-file
+                   options)))

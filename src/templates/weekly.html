@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Remember to sanity check and edit</title>
+  </head>
+  <body>
+    <b>To:</b> <span id="to">Test Cloud PM Team &lt;test-cloud-pm@microsoft.com&gt;; Simina Pasat &lt;siminap@microsoft.com&gt;; Villars Gimm &lt;vigimm@microsoft.com&gt;; Karl Piteira &lt;kapiteir@microsoft.com&gt;</span><br>
+    <b>cc:</b> <span id="cc">Jakub Oleksy &lt;jakubo@exchange.microsoft.com&gt;; Test Cloud All &lt;test-cloud-all@microsoft.com&gt;; Mobile Center - Commerce Team &lt;mobile-center-commer@microsoft.com&gt;; Mobile Center - Auto Provisioning Team &lt;mobile-center-autopr@microsoft.com&gt;</span><br>
+    <b>Title: </b>Eng. status <span id="title-date">2017-06-05</span>: Auto Provisioning, Azure Billing, Test Cloud
+    <h3>Engineering status</h3>
+    <p>This provides a raw draft status which is used as input for the weekly status sent by PMs.<br>
+      Justin send status for: Test Cloud<br>
+      No standalone status is sent for: Auto-Provisioning, Azure Billing
+    <p>
+      <b>VSTS Backlogs</b><br>
+      <a href="https://msmobilecenter.visualstudio.com/Test/_backlogs/board/Stories">
+        Test Cloud</a><br>
+      <a href="https://msmobilecenter.visualstudio.com/Project-100/Auto-Provisioning/_backlogs/board/Stories">
+        Auto-Provisioning</a><br>
+      <a href="https://msmobilecenter.visualstudio.com/Project-100/Azure-Billing/_backlogs/board/Stories">
+        Azure Billing</a><br>
+
+    <p><b>Key Objectives for Next Two Months</b>
+      <ul id="key-objectives-static">
+        <li>Plan technical solution for Secure Credentials Storage for Auto Provisioning
+          <table>
+            <tr>
+              <td>Target Date:</td>
+              <td><b>June 12th</b></td>
+            </tr>
+            <tr>
+              <td>Confidence:</td>
+              <td><b>Medium</b></td>
+            </tr>
+          </table>
+          <p>Reduce uncertainty:
+            <ul>
+              <li>Coordinate and get agreement across all stake holders</li>
+            </ul>
+            <br>
+        </li>
+        <li>Test Cloud Security improvements roadmap
+          <table>
+            <tr>
+              <td>Target Date:</td>
+              <td><b>June 15th</b></td>
+            </tr>
+            <tr>
+              <td>Confidence:</td>
+              <td><b>High</b></td>
+            </tr>
+            <tr>
+              <td><a href="https://msmobilecenter.visualstudio.com/Test/_workitems?id=3732&_a=edit&fullScreen=true">VSTS Story</a></td>
+            </tr>
+          </table>
+        </li>
+      </ul>
+      <ul id="key-objectives-vsts">
+        <li><i>Auto Provisioning MVP (without secrets storage):</i><table><tr><td>Target Date</td><td><b>August 3rd</b></td></tr><tr><td>Confidence</td><td><b>Medium</b></td></tr></table><p>Reduce uncertainty by:</p><ul><li>bla bla bla</li></ul><p><a href=\"https://msmobilecenter.visualstudio.com/Project-100/_workitems?id=7417&amp;_a=edit&amp;fullScreen=true\"></a></p><br /></li>
+
+      </ul>
+
+    <p><b>Telemetry:</b> [PMs to report]
+
+    <p><b>Risks & Notices</b><br>
+      <ol>
+        <li> Windows support: Given past history of the windows automation team, we have low confidence in the quality of the bits provided by the team. We have included this in our "Plan for a plan", but this item will likely remain as a risk to windows support "this year".</li>
+      </ol>
+    <section id="weekly-progress">
+      <p><b>Last week (~5 select items)</b>
+        <ol id="last-week">
+          <li>X</li>
+          <li>X</li>
+          <li>X</li>
+          <li>X</li>
+          <li>X</li>
+        </ol>
+      <p><b>This week (~5 select items)</b>
+        <ol id="this-week">
+          <li>
+            <a href="https://msmobilecenter.visualstudio.com/Project-100/Auto-Provisioning/_workitems?id=7417&fullScreen=true&_a=edit">Auto Provisioning MVP: backend for sun-shine auto-provisioning with transient storage</a> [Chris, Aaron, Ramon]
+          </li>
+          <li>
+            <a href="https://msmobilecenter.visualstudio.com/Project-100/_workitems?id=4081&_a=edit&fullScreen=true">Research & document scenarios that use apple secrets</a> [Søren]
+          </li>
+          <li><a href="https://msmobilecenter.visualstudio.com/Project-100/_workitems?id=6865&_a=edit&fullScreen=true">Billing service REST API</a> – SPIKE to get API deployed in INT: fake data [Bjørn, Tomasz]</li>
+          <li>Billing service: Software infrastructure stand-up (<a href="https://msmobilecenter.visualstudio.com/Project-100/Azure-Billing/_workitems?id=6864&fullScreen=true&_a=edit">CosmosDB</a>,
+            <a href="https://msmobilecenter.visualstudio.com/Project-100/Azure-Billing/_workitems?id=6866&fullScreen=true&_a=edit">Worker role</a>) [Jon, Tomasz]</li>
+          <li>Live-site post-mort action items [Kasper, Ole, Christof, Søren]
+            <ul>
+              <li><a href="https://microsoft.sharepoint.com/teams/mobiledevops70/_layouts/OneNote.aspx?id=%2Fteams%2Fmobiledevops70%2FSiteAssets%2FMobile%20Dev%20Ops%20Notebook&wd=target%28Engineering%2FLiveSite%2FIncidents.one%7C81492FA7-B4EC-4E9B-ABFD-95085C239C1B%2F17-05-30%20%5BICM%3A%2038579535%5D%20Test%20cloud%20status%20endpoints%7CE2D924BE-7419-494C-BFD2-6919D2E3836E%2F%29">17-05-30 [ICM: 38579535] Test cloud status endpoints are unavailable </a>
+              </li>
+              <li><a href="https://microsoft.sharepoint.com/teams/mobiledevops70/_layouts/OneNote.aspx?id=%2Fteams%2Fmobiledevops70%2FSiteAssets%2FMobile%20Dev%20Ops%20Notebook&wd=target%28Engineering%2FLiveSite%2FIncidents.one%7C81492FA7-B4EC-4E9B-ABFD-95085C239C1B%2F17-06-02%20%5BICM%3A%2038846639%5D%20Some%20Mobile%20Center%20tests%7C3085983C-C38A-43A0-B219-005F2692971F%2F%29">17-06-02 [ICM: 38846639] Some Mobile Center tests not started successfully</a></li>
+          </li>
+
+          <li><a href="https://msmobilecenter.visualstudio.com/Test/_workitems?id=6604&_a=edit&fullScreen=true">Support sales to Audi Lighthouse: codesign issue for MyAudi</a> [Simon]</li>
+        </ol>
+    </section>
+  </body>
+</html>

@@ -140,3 +140,24 @@
                project
                (work-item-tree root grouped-by-parents)
                options))
+
+(defn view-model [work-item]
+  (let [team-project (get-system-field work-item :TeamProject)
+        target-date-time (get-in work-item [:fields
+                                            :Microsoft.VSTS.Scheduling.TargetDate])
+        target-date  (and target-date-time
+                          (first (clojure.string/split target-date-time #"T")))
+        html-url (str "https://msmobilecenter.visualstudio.com/"
+                      team-project
+                      "/_workitems?id="
+                      (:id work-item)
+                      "&_a=edit&fullScreen=true")
+
+        assigned-to (get-system-field work-item :AssignedTo)
+        assigned-to-firstname (first (clojure.string/split assigned-to #" "))]
+    {:title (get-system-field work-item :Title)
+     :target-date target-date
+     :confidence (get-in work-item [:fields :Simpleagileprocess.CloseDateConfidence])
+     :assigned-to assigned-to
+     :assigned-to-firstname assigned-to-firstname
+     :vsts-link html-url}))

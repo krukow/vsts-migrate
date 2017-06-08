@@ -10,7 +10,9 @@
                  [clj-http "2.3.0"]
                  [cheshire "5.7.0"]
                  [org.clojure/tools.cli "0.3.5"]
-                 [commons-codec/commons-codec "1.10"]]
+                 [commons-codec/commons-codec "1.10"]
+                 [enlive "1.1.6"]
+                 [clj-time "0.13.0"]]
   :plugins [[cider/cider-nrepl "0.14.0"]
             [refactor-nrepl "2.2.0"]]
 
