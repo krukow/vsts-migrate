@@ -101,7 +101,7 @@
         (println "DRY RUN: Not deleting item" id)))))
 
 (defn template
-  [instance work-item-ids options]
+  [instance input-template work-item-ids output-file options]
   (let [items (api/get-work-items instance work-item-ids)
         view-model (map wi-helpers/view-model (:value items))]
     (println "View model for work items: " work-item-ids)
@@ -109,6 +109,6 @@
     (if-not (:dry-run options)
       (do
         (println "Printing template for work-items" work-item-ids)
-        (spit (:output-file options) (apply str (template/main-template view-model)))
-        (println "Wrote result to " (:output-file options)))
+        (spit output-file (apply str (template/run-template input-template view-model)))
+        (println "Wrote result to " output-file))
       (println "DRY RUN: Not writing file"))))

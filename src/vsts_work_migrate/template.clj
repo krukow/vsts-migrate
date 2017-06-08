@@ -1,5 +1,7 @@
 (ns vsts-work-migrate.template
-  (:require [net.cgrand.enlive-html :as html]))
+  (:require [net.cgrand.enlive-html :as html]
+            [clj-time.core :as time]
+            [clj-time.format :as format]))
 
 (def ^:dynamic *dummy-objectives*
      {:title "Enlive Template2 Tutorial"
@@ -31,11 +33,30 @@
     [:br]
     [:br])))
 
-(defn today []
-  (str (java.util.Date.)))
+(defn on-monday []
+  (let [now (time/now)]
+    (time/plus
+     now
+     (time/days (mod (- 8 (time/day-of-week now))
+                     8)))))
 
 (html/deftemplate main-template "templates/weekly.html"
   [objectives]
-  [:span#title] (html/content "Eng. status " (today) ": Auto Provisioning, Azure Billing, Test Cloud")
+  [:span#title] (html/content "Eng. status "
+                              (format/unparse (format/formatters :year-month-day) (on-monday))
+                              ": Auto Provisioning, Azure Billing, Test Cloud")
   [:ul#key-objectives-vsts]
   (html/content (map #(objective %) objectives)))
+
+(defn run-template
+  [input-template objectives]
+  (let [my-template
+        (html/template
+          input-template
+          [objectives]
+          [:#key-objectives-vsts]
+          (html/content (map #(objective %) objectives))
+          [:#weekly-progress]
+          (html/move [[:#this-week] :> :li] [:#last-week] html/content)
+          [:#this-week] (html/content (html/html [:li])))]
+    (my-template objectives)))
