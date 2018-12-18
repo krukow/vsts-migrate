@@ -1,39 +1,65 @@
 (ns vsts-work-migrate.core
-   (:require [clojure.java.io :as io]
-             [clojure.string :as str]
-             [clojure.pprint :as pp]
-             [vsts-work-migrate.config :as cfg]
-             [vsts-work-migrate.vsts-api :as api]
-             [vsts-work-migrate.mappings :as mappings]
-             [vsts-work-migrate.helpers :as wi-helpers]
-             [cheshire.core :as json]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [clojure.pprint :as pp]
+            [vsts-work-migrate.config :as cfg]
+            [vsts-work-migrate.vsts-api :as api]
+            [vsts-work-migrate.mappings :as mappings]
+            [vsts-work-migrate.helpers :as wi-helpers]
+            [cheshire.core :as json]))
 
 (defn query-work-items
   [query]
-  (api/query-work-items cfg/mseng-instance "Mobile%20Center" query))
+  (api/query-work-items (cfg/source-instance)
+                        (get-in (cfg/config) [:ado-migrate.config/source
+                                              :ado-migrate.config/project])
+                        query))
 
 (defn print-query-result [query-result]
   (println "Found" (count (:workItems query-result)) "results")
   query-result)
 
+
 (defn fetch-work-items
   [query-response]
-  (println "Fetching work item data for "
-           (count (:workItems query-response))
-           "work items")
-  (let [work-item-data (api/get-work-items cfg/mseng-instance
-                                           (map :id (:workItems query-response)))]
-    (:value work-item-data)))
+  (if (zero? (count (:workItems query-response)))
+    []
+    (let [get-id (fn [{url :url}]
+                   {:id (->> url
+                             (re-matches #".+/wit/workItems/(\d+)")
+                             last
+                             Integer/parseInt)})
+          fetch-children (fn [{:keys [relations] :as work-item}]
+                           (let [children
+                                 (filter
+                                  #(= "System.LinkTypes.Hierarchy-Forward"
+                                      (:rel %)) relations)]
+                             (assoc work-item
+                                    :children
+                                    (fetch-work-items
+                                     {:workItems
+                                      (map get-id children)}))))
+
+          work-item-data (api/get-work-items (cfg/source-instance)
+                                             (map :id (:workItems query-response)))
+          work-items (:value work-item-data)]
+      (map fetch-children work-items))))
 
 (defn map-work-items
   [mapping work-item-data]
-  (->> work-item-data
-       (map #(mappings/map-via mapping %))
-       (group-by :id)
+  (letfn [(rec-map-work-item
+            [work-item]
+            (let [mapped-parent (mappings/map-via mapping work-item)]
+              (assoc mapped-parent
+                     :children
+                     (map rec-map-work-item (:children mapped-parent [])))))]
+    (->> work-item-data
+         (map rec-map-work-item)
+         (group-by :id)
 
-       ;; change to map: id -> work-item
-       (map (fn [[k vs]] [k (first vs)]))
-       (into {})))
+         ;; change to map: id -> work-item
+         (map (fn [[k vs]] [k (first vs)]))
+         (into {}))))
 
 
 (defn save-work-items [options file res]
@@ -44,35 +70,22 @@
 
 
 (defn dump
-  [query-file mapping-file output options]
-  (let [query (slurp query-file)
-        mapping (json/parse-string (slurp mapping-file))]
-    (println "Query:")
-    (println query)
-    (println "Mapping:")
-    (pp/pprint mapping)
-    (->> query
-         query-work-items
-         print-query-result
+  [output-path {:keys [work-items] :as options}]
+  (let [work-items-results
+        (if (clojure.string/ends-with? (.toLowerCase work-items) ".wiql")
+          (query-work-items (slurp work-items))
+          {:workItems [(api/get-work-items
+                        (cfg/source-instance)
+                        (Integer/parseInt work-items 10))]})]
+    (->> work-items-results
          fetch-work-items
-         (map-work-items mapping)
-         wi-helpers/pretty-print-work-items
-         (save-work-items options (io/file output)))))
-
-
+         (save-work-items options output-path))))
 
 (defn recreate-work-items
-  [instance project work-items options]
-  (let [work-items-list (vals work-items)
-        grouped-by-type (group-by #(get-in % [:fields (keyword "System.WorkItemType")]) work-items-list)
-        epics     (get grouped-by-type "Epic")
-        features  (get grouped-by-type "Feature")
-        stories   (get grouped-by-type "User Story")
-        tasks     (get grouped-by-type "Task")
-        bugs      (get grouped-by-type "Bug")
-        grouped-by-parents (group-by wi-helpers/parent-id work-items-list)]
+  [work-items options]
+  (let [work-items-list (vals work-items)]
 
-    (loop [ordered-list (concat epics features stories tasks bugs)
+    (loop [ordered-list work-items-list
            all-created-items {}]
       (if-let [next-item (first ordered-list)]
         (if (get all-created-items (:id next-item)) ;; already created
@@ -80,14 +93,28 @@
 
           ;; create tree rooted at next-item
           (let [created-items (wi-helpers/create-all-work-items
-                                          instance
-                                          project
-                                          next-item
-                                          grouped-by-parents
-                                          options)]
+                               (cfg/target-instance)
+                               (get-in (cfg/config)
+                                       [:ado-migrate.config/target
+                                        :ado-migrate.config/project])
+                               next-item
+                               options)]
             (recur (rest ordered-list) (merge all-created-items created-items))))
         all-created-items))))
 
+
+(defn copy
+  [work-items options]
+  (let [work-items-results
+        (if (clojure.string/ends-with? (.toLowerCase work-items) ".wiql")
+          (query-work-items (slurp work-items))
+          {:workItems [(api/get-work-items
+                        (cfg/source-instance)
+                        (Integer/parseInt work-items 10))]})
+        work-items (->> work-items-results
+                        fetch-work-items
+                        (map-work-items (:ado-migrate.config/mapping (cfg/config))))]
+    (recreate-work-items work-items options)))
 
 (defn delete-tree
   [instance created-items options]
@@ -98,3 +125,7 @@
         (api/delete-work-item instance id))
       (do
         (println "DRY RUN: Not deleting item" id)))))
+
+
+(defn delete [saved-results-to-delete options]
+  (delete-tree (cfg/target-instance) saved-results-to-delete options))

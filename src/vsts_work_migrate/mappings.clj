@@ -16,13 +16,18 @@
   [mapping work-item]
   (let [red (fn [work-item key]
               (update-in work-item
-                         [:fields (keyword key)]
+                         [:fields (keyword nil (name key))]
                          (fn [old-val]
-                           (if-let [mapped-value (get-in mapping [key old-val])]
-                             mapped-value
-                             (RuntimeException. (str "Couldn't map " old-val
-                                                     " to a value for key: "
-                                                     key))))))]
+                           (if (string? old-val)
+                             (loop [rules (get mapping key)]
+                               (if-let [rules (seq rules)]
+                                 (let [[re-str sub] (first rules)
+                                       re (re-pattern re-str)]
+                                   (if (re-seq re old-val)
+                                     (clojure.string/replace old-val re sub)
+                                     (recur (next rules))))
+                                 old-val))
+                             old-val))))]
       (reduce red work-item (keys mapping))))
 
 

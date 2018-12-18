@@ -20,16 +20,14 @@
              (RuntimeException. (str "Work item " work-item "has several parents"))))))
 
 
-(defn work-item-parent? [work-item parent-grouped-work-items]
-  (not-empty (get parent-grouped-work-items (:id work-item))))
 
-(defn work-item-children [work-item parent-grouped-work-items]
-  (get parent-grouped-work-items (:id work-item)))
+(defn work-item-children [work-item]
+  (seq (:children work-item)))
 
 (defn work-item-tree
-  [root grouped-work-items]
-  (tree-seq #(work-item-parent? % grouped-work-items)
-            #(work-item-children % grouped-work-items)
+  [root]
+  (tree-seq #(work-item-children %)
+            #(work-item-children %)
             root))
 
 (defn indentation-for-work-item [work-item]
@@ -43,30 +41,6 @@
       :else "*******")))
 
 ;; todo refactor: loop/recur, items-to-print, leverage work-item-tree tree-seq
-(defn pretty-print-work-items
-  [work-items]
-  (let [work-items-list (vals work-items)
-        grouped-by-type (group-by #(get-in % [:fields (keyword "System.WorkItemType")]) work-items-list)
-        epics (get grouped-by-type "Epic")
-        features (get grouped-by-type "Feature")
-        stories (get grouped-by-type "User Story")
-        tasks (get grouped-by-type "Task")
-        bugs (get grouped-by-type "Bug")
-        grouped-by-parents (group-by parent-id work-items-list)
-        items-to-print (java.util.HashMap. work-items)]
-
-    (loop [ordered-list (concat epics features stories tasks bugs)]
-      (if-let [next-item (first ordered-list)]
-        (do
-          (when (get items-to-print (:id next-item))
-            (println (get-system-field next-item :WorkItemType) (str "(" (:id next-item) "):") (get-system-field next-item :Title) )
-            (.remove items-to-print (:id next-item))
-            (doseq [work-item (rest (work-item-tree next-item grouped-by-parents))]
-              (print (indentation-for-work-item work-item))
-              (println (get-system-field work-item :WorkItemType) (str "(" (:id work-item) ")" ":") (get-system-field work-item :Title) )
-              (.remove items-to-print (:id work-item))))
-          (recur (rest ordered-list)))))
-    work-items))
 
 (defn operations-to-create-work-item
   [work-item parent-already-created-work-item]
@@ -135,8 +109,8 @@
 
 
 (defn create-all-work-items
-  [instance project root grouped-by-parents options]
+  [instance project root options]
   (create-tree instance
                project
-               (work-item-tree root grouped-by-parents)
+               (work-item-tree root)
                options))

@@ -1,0 +1,23 @@
+#:ado-migrate.config
+{
+ :source
+ #:ado-migrate.config
+ {:instance "mseng.visualstudio.com" :project "1ES"}
+
+ :target
+ #:ado-migrate.config
+ {:instance "mseng.visualstudio.com" :project "1ES"}
+
+ :mapping
+ #:azure.devops.work-items
+ {
+  :System.State [["(.+)" "New"]]
+  :System.WorkItemType
+  [
+   ["User Story" "Feature"]
+   ["Task" "User Story"]
+   ["(.+)" "$1"] ;; identity transform
+  ]
+  :System.AreaPath []
+ }
+}

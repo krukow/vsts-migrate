@@ -26,7 +26,7 @@
 
 (defn work-items-create-url [instance project work-item-type-name]
   (str "https://" (:name instance)
-       "/DefaultCollection/" project "/_apis/wit/workitems/$" work-item-type-name "?bypassRules=true&api-version=3.0-preview"))
+       "/DefaultCollection/" project "/_apis/wit/workitems/$" work-item-type-name "?bypassRules=false&api-version=3.0-preview"))
 
 (defn wiql-url [instance project]
   (str "https://" (:name instance)
