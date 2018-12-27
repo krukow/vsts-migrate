@@ -61,25 +61,16 @@
          (map (fn [[k vs]] [k (first vs)]))
          (into {}))))
 
-
-(defn save-work-items [options file res]
-  (when-not (:dry-run options)
-    (spit file (json/generate-string res {:pretty true}))
-    (println "Saved output in" (.getAbsolutePath file)))
-  res)
-
-
 (defn dump
-  [output-path {:keys [work-items] :as options}]
+  [{:keys [work-items] :as options}]
   (let [work-items-results
         (if (clojure.string/ends-with? (.toLowerCase work-items) ".wiql")
           (query-work-items (slurp work-items))
-          {:workItems [(api/get-work-items
-                        (cfg/source-instance)
-                        (Integer/parseInt work-items 10))]})]
-    (->> work-items-results
-         fetch-work-items
-         (save-work-items options output-path))))
+          {:workItems (:value (api/get-work-items
+                               (cfg/source-instance)
+                               [(Integer/parseInt work-items 10)]))})]
+
+    (fetch-work-items work-items-results)))
 
 (defn recreate-work-items
   [work-items options]
@@ -104,17 +95,12 @@
 
 
 (defn copy
-  [work-items options]
-  (let [work-items-results
-        (if (clojure.string/ends-with? (.toLowerCase work-items) ".wiql")
-          (query-work-items (slurp work-items))
-          {:workItems [(api/get-work-items
-                        (cfg/source-instance)
-                        (Integer/parseInt work-items 10))]})
-        work-items (->> work-items-results
-                        fetch-work-items
-                        (map-work-items (:ado-migrate.config/mapping (cfg/config))))]
-    (recreate-work-items work-items options)))
+  [{:keys [work-items] :as options}]
+  (let [work-items-results (dump options)
+        mapped-work-items  (map-work-items (:ado-migrate.config/mapping
+                                            (cfg/config))
+                                           work-items-results)]
+    (recreate-work-items mapped-work-items options)))
 
 (defn delete-tree
   [instance created-items options]

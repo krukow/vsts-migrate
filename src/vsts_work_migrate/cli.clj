@@ -15,7 +15,7 @@
     (println cli-summary)
     (println "\nTools:
     dump        - Dump work items from source. Arguments: <dump-file-path>
-    copy        - Copy WIQL query result to target.   Arguments: <saved-results-output-path>
+    copy        - Copy WIQL query result to target. Arguments: <saved-results-output-path>
     delete      - Delete previously copied work-items from target (i.e. \"undo\" creation). Arguments: <saved-results-output-path>.
     ")))
 
@@ -77,6 +77,13 @@
     (System/exit 0)))
 
 
+(defn save-work-items [res file options]
+  (when-not (:dry-run options)
+    (spit file (json/generate-string res {:pretty true}))
+    (println "Saved output in" (.getAbsolutePath file)))
+  res)
+
+
 
 (defn dump [options args]
   (let [[dump-file-path] args]
@@ -90,7 +97,10 @@
 
     (println "Dumping " (:work-items options) " from source...")
 
-    (core/dump (io/file dump-file-path) options)))
+    (save-work-items
+     (core/dump options)
+     (io/file dump-file-path)
+     options)))
 
 
 (defn copy [options args]
@@ -105,9 +115,7 @@
 
     (println "Copying results: " (:work-items options) " to target and saving to " saved-results-output-path)
 
-    (let [created-items (core/copy
-                         (:work-items options)
-                         options)
+    (let [created-items (core/copy options)
           saved-results-file (io/file saved-results-output-path)]
       (println "Saving created items: " (.getAbsolutePath saved-results-file))
       (spit saved-results-file (json/generate-string created-items {:pretty true})))))
@@ -115,7 +123,6 @@
 
 (defn delete
   [options args]
-  (throw (RuntimeException. "Not implemented yet"))
   (let [[saved-results-output-path] args]
     (when-not (and saved-results-output-path (.exists
                                               (io/file saved-results-output-path)))

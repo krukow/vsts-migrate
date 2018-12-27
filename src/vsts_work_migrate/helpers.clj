@@ -97,9 +97,8 @@
                                                (get-system-field old-item :WorkItemType)
                                                items-ops)
                          old-item)]
-      (if (:dry-run options)
-        (print "WOULD CREATE: ")
-        (print "CREATED: "))
+      (when (:dry-run options)
+        (print "WOULD CREATE: "))
       (print (indentation-for-work-item created-item))
       (println (get-system-field old-item :WorkItemType) (str "(" (:id old-item) "):") (get-system-field old-item :Title))
       (let [updated-old->new (assoc old->new (get old-item :id) created-item)]
